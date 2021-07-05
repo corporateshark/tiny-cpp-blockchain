@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+deps/.bootstrap.json
+deps/archives/
+deps/src/

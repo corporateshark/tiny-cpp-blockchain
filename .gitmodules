@@ -1,0 +1,3 @@
+[submodule "deps/bootstrap"]
+	path = deps/bootstrap
+	url = https://github.com/corporateshark/bootstrapping.git

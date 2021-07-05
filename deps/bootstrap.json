@@ -1,0 +1,10 @@
+[
+{
+    "name": "sha2",
+    "source": {
+        "type": "archive",
+        "url": "https://aarongifford.com/computers/sha2-1.0.1.zip",
+        "sha1": "f055e5e6f5364a45abfc77b7572bb39423a74670"
+    }
+}
+]
