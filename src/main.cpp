@@ -1,8 +1,10 @@
 ﻿
 #include <assert.h>
+#include <conio.h>
 #include <stdint.h>
 #include <stdio.h>
 
+#include <chrono>
 #include <vector>
 
 #include "sha2.h"
@@ -53,6 +55,8 @@ bool mineBlock(Block& block, uint8_t currentDifficulty)
 {
 	for (;;)
 	{
+		auto now = std::chrono::system_clock::now();
+		block.timeStamp_ = std::chrono::time_point_cast<std::chrono::milliseconds>(now).time_since_epoch().count();
 		if (checkDifficulty(block, currentDifficulty))
 		{
 			calculateHash(block);
@@ -63,12 +67,21 @@ bool mineBlock(Block& block, uint8_t currentDifficulty)
 	return false;
 }
 
+std::tm* gettm(uint64_t timestamp)
+{
+	auto tp = std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds>(std::chrono::milliseconds(timestamp));
+	auto tt = std::chrono::system_clock::to_time_t(tp);
+	return std::gmtime(&tt);
+}
+
 /// print Block info with truncated SHAs to fit them on a single line
 void printBlockNeat(const Block& block)
 {
+	std::tm* t = gettm(block.timeStamp_);
+
 	printf("Metadata    : %u\n", block.metaData_);
 	printf("Nonce       : %llu\n", block.nonce_);
-	printf("Timestamp   : %llu\n", block.timeStamp_);
+	printf("Timestamp   : %llu (%4d/%02d/%02d %02d:%02d:%02d +0000 GMT)\n", block.timeStamp_, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
 	printf("Prev SHA-512: %.64s\n", block.hashPrev_);
 	printf("SHA-512     : %.64s\n", block.hash_);
 	printf("PayloadSz   : %u\n\n", (uint32_t)block.payloadSize_);
