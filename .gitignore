@@ -34,3 +34,4 @@
 deps/.bootstrap.json
 deps/archives/
 deps/src/
+build/
