@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include <chrono>
+#include <filesystem>
 #include <vector>
 
 #include "sha2.h"
@@ -22,6 +23,38 @@ struct Block
 	char hash_[SHA512_DIGEST_STRING_LENGTH] = { 0 };
 	uint16_t payloadSize_ = 0;
 	uint8_t payload_[];
+};
+
+class Blockchain
+{
+public:
+	Blockchain()
+	{
+		// genesis block
+		blocks_.emplace_back();
+	}
+
+	void mineNextBlock(uint8_t currentDifficulty);
+	void save(const char* fileName) const
+	{
+		FILE* f = fopen(fileName, "wb");
+		const uint64_t numBlocks = blocks_.size();
+		fwrite(&numBlocks, sizeof(numBlocks), 1, f);
+		fwrite(blocks_.data(), sizeof(Block), numBlocks, f);
+		fclose(f);
+	}
+	void load(const char* fileName)
+	{
+		FILE* f = fopen(fileName, "rb");
+		uint64_t numBlocks = 0;
+		fread(&numBlocks, sizeof(numBlocks), 1, f);
+		blocks_.resize(numBlocks);
+		fread(blocks_.data(), sizeof(Block), numBlocks, f);
+		fclose(f);
+	}
+
+public:
+	std::vector<Block> blocks_;
 };
 
 void calculateHash(Block& block)
@@ -87,14 +120,30 @@ void printBlockNeat(const Block& block)
 	printf("PayloadSz   : %u\n\n", (uint32_t)block.payloadSize_);
 }
 
+void Blockchain::mineNextBlock(uint8_t currentDifficulty)
+{
+	Block block;
+	memcpy(block.hashPrev_, blocks_.back().hash_, SHA512_DIGEST_STRING_LENGTH);
+	mineBlock(block, currentDifficulty);
+	printBlockNeat(block);
+	blocks_.push_back(block);
+}
+
 int main()
 {
-	printf("Mining...\n\n");
+	const uint8_t currentDifficulty = 4;
+	const char* blockchainFile = "tiny-blockchain.data";
 
-	Block block;
+	Blockchain chain;
+	if (std::filesystem::exists(blockchainFile))
+		chain.load(blockchainFile);
 
-	mineBlock(block, 5);
-	printBlockNeat(block);
+	printf("Mining... (press ESC to abort)\n\n");
 
+	while (!_kbhit())
+	{
+		chain.mineNextBlock(currentDifficulty);
+		chain.save(blockchainFile);
+	}
 	return 0;
 }
