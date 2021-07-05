@@ -1,5 +1,9 @@
-﻿#include <stdint.h>
+﻿
+#include <assert.h>
+#include <stdint.h>
 #include <stdio.h>
+
+#include <vector>
 
 #include "sha2.h"
 
@@ -45,9 +49,39 @@ bool checkDifficulty(const Block& block, uint8_t difficulty)
 	return true;
 }
 
+bool mineBlock(Block& block, uint8_t currentDifficulty)
+{
+	for (;;)
+	{
+		if (checkDifficulty(block, currentDifficulty))
+		{
+			calculateHash(block);
+			return true;
+		}
+		block.nonce_++;
+	}
+	return false;
+}
+
+/// print Block info with truncated SHAs to fit them on a single line
+void printBlockNeat(const Block& block)
+{
+	printf("Metadata    : %u\n", block.metaData_);
+	printf("Nonce       : %llu\n", block.nonce_);
+	printf("Timestamp   : %llu\n", block.timeStamp_);
+	printf("Prev SHA-512: %.64s\n", block.hashPrev_);
+	printf("SHA-512     : %.64s\n", block.hash_);
+	printf("PayloadSz   : %u\n\n", (uint32_t)block.payloadSize_);
+}
+
 int main()
 {
+	printf("Mining...\n\n");
+
 	Block block;
+
+	mineBlock(block, 5);
+	printBlockNeat(block);
 
 	return 0;
 }
